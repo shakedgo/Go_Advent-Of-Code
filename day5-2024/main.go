@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	input, err := os.ReadFile("input.txt")
+	input, err := os.ReadFile("controlInput.txt")
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -49,26 +49,33 @@ func main() {
 	var sumMiddles int
 
 	// Needs Change - Very complex.
-	for _, page := range updatePages {
+	for _, update := range updatePages {
 		isValid := true
-		for numIndex, num := range page {
-			for _, ruleNums := range orderRules {
-				if ruleNums[0] == num {
-					for i := numIndex; i >= 0; i-- {
-						if page[i] == ruleNums[1] {
-							isValid = false
+		var numsBefore []int
+		for numIndex, num := range update {
+			if numIndex > 0 {
+				for _, ruleNums := range orderRules {
+					if ruleNums[0] == num {
+						for _, numBefore := range numsBefore {
+							if numBefore == ruleNums[1] {
+								isValid = false
+							}
 						}
 					}
 				}
 			}
+			numsBefore = append(numsBefore, num)
 		}
 		if isValid {
-			middleIndex := len(page) / 2
-			middleItem := page[middleIndex]
+			middleIndex := len(update) / 2
+			middleItem := update[middleIndex]
 			sumMiddles += middleItem
 		}
 
 	}
+
+	// fmt.Println("Rules:", orderRules)
+	// fmt.Println("Pages:", updatePages)
 
 	fmt.Println("Part 1 Result:", sumMiddles)
 }
