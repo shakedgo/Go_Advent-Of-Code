@@ -16,8 +16,9 @@ func main() {
 	}
 	content := string(input)
 
-	var orderRules [][2]int
+	// var orderRules [][2]int
 	var updatePages [][]int
+	ruleMap := make(map[int]map[int]bool)
 	inSecondSection := false
 
 	scanner := bufio.NewScanner(strings.NewReader(content))
@@ -42,7 +43,10 @@ func main() {
 			rule := strings.Split(string(line), "|")
 			num1, _ := strconv.Atoi(rule[0])
 			num2, _ := strconv.Atoi(rule[1])
-			orderRules = append(orderRules, [2]int{num1, num2})
+			if ruleMap[num1] == nil {
+				ruleMap[num1] = make(map[int]bool)
+			}
+			ruleMap[num1][num2] = true
 		}
 	}
 
@@ -51,20 +55,17 @@ func main() {
 	// Needs Change - Very complex.
 	for _, update := range updatePages {
 		isValid := true
-		var numsBefore []int
-		for numIndex, num := range update {
-			if numIndex > 0 {
-				for _, ruleNums := range orderRules {
-					if ruleNums[0] == num {
-						for _, numBefore := range numsBefore {
-							if numBefore == ruleNums[1] {
-								isValid = false
-							}
-						}
+		seen := make(map[int]bool)
+		for _, num := range update {
+			if invalids, exists := ruleMap[num]; exists {
+				for invalid := range invalids {
+					if seen[invalid] {
+						isValid = false
+						break
 					}
 				}
 			}
-			numsBefore = append(numsBefore, num)
+			seen[num] = true
 		}
 		if isValid {
 			middleIndex := len(update) / 2
