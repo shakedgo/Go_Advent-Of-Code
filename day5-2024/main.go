@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	input, err := os.ReadFile("controlInput.txt")
+	input, err := os.ReadFile("input.txt")
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -51,6 +51,7 @@ func main() {
 	}
 
 	var sumMiddles int
+	var sumFixedMiddles int
 
 	// Needs Change - Very complex.
 	for _, update := range updatePages {
@@ -62,21 +63,72 @@ func main() {
 					if seen[invalid] {
 						isValid = false
 						break
+
 					}
 				}
 			}
 			seen[num] = true
 		}
+
 		if isValid {
 			middleIndex := len(update) / 2
 			middleItem := update[middleIndex]
 			sumMiddles += middleItem
+		} else {
+			sorted := topoSort(update, ruleMap)
+			if len(sorted) > 0 {
+				middle := sorted[len(sorted)/2]
+				sumFixedMiddles += middle
+			}
 		}
 
 	}
 
-	// fmt.Println("Rules:", orderRules)
-	// fmt.Println("Pages:", updatePages)
-
 	fmt.Println("Part 1 Result:", sumMiddles)
+	fmt.Println("Part 2 Result:", sumFixedMiddles)
+}
+
+func topoSort(updates []int, rules map[int]map[int]bool) []int {
+	inDegree := make(map[int]int)
+	adj := make(map[int][]int)
+
+	update := make(map[int]bool)
+	for _, n := range updates {
+		update[n] = true
+	}
+
+	for from := range update {
+		for to := range update {
+			if rules[from] != nil && rules[from][to] {
+				adj[to] = append(adj[to], from)
+				inDegree[from]++
+			}
+		}
+	}
+
+	var queue []int
+	for _, node := range updates {
+		if inDegree[node] == 0 {
+			queue = append(queue, node)
+		}
+	}
+
+	var sorted []int
+	for len(queue) > 0 {
+		curr := queue[0]
+		queue = queue[1:]
+		sorted = append(sorted, curr)
+		for _, neighbor := range adj[curr] {
+			inDegree[neighbor]--
+			if inDegree[neighbor] == 0 {
+				queue = append(queue, neighbor)
+			}
+		}
+	}
+
+	if len(sorted) != len(updates) {
+		return nil
+	}
+
+	return sorted
 }
